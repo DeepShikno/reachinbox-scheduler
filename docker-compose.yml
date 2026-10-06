@@ -1,0 +1,30 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]   # AOF persistence so queued jobs survive Redis restarts
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: reachinbox
+    ports: ["3306:3306"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  elasticsearch:   # used in Phase 3
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports: ["9200:9200"]
+    volumes: [es_data:/usr/share/elasticsearch/data]
+
+volumes:
+  redis_data:
+  mysql_data:
+  es_data:
